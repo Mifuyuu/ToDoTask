@@ -403,29 +403,22 @@ body {
 }
 
 .delete-btn {
-  background: var(--red);
+  background: none;
   border: none;
-  border-radius: 10px;
-  box-shadow: 0 3px 0 var(--red-dark);
-  padding: 6px;
   cursor: pointer;
-  color: white;
+  color: var(--gray-dark);
   display: flex;
-  transition: transform 0.1s, box-shadow 0.1s;
+  transition: color 0.2s, transform 0.2s;
 }
 
 .delete-btn .icon {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
 }
 
 .delete-btn:hover {
-  filter: brightness(1.08);
-}
-
-.delete-btn:active {
-  transform: translateY(3px);
-  box-shadow: none;
+  color: var(--red);
+  transform: scale(1.2);
 }
 
 .empty {
