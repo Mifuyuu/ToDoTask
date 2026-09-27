@@ -11,11 +11,8 @@ const owl = document.getElementById("owl");
 const speech = document.getElementById("speech");
 const celebrate = document.getElementById("celebrate");
 const filterButtons = document.querySelectorAll(".filter");
-const activityGrid = document.getElementById("activityGrid");
-const activityTotal = document.getElementById("activityTotal");
 
 const XP_PER_TASK = 10;
-const GRID_WEEKS = 26; // แสดงย้อนหลังกี่สัปดาห์ (ประมาณ 6 เดือน)
 const STORAGE_KEY = "todolingo-data";
 
 // ไอคอนจาก Heroicons (https://heroicons.com) แบบ outline
@@ -24,11 +21,10 @@ const ICON_TRASH = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="cu
 
 // ===== ข้อมูลของแอป =====
 let data = {
-  tasks: [],          // { id, text, done, doneDate }
+  tasks: [],          // { id, text, done }
   xp: 0,
   streak: 0,
-  lastDoneDate: "",   // วันที่ทำงานเสร็จล่าสุด (ไว้คำนวณ streak)
-  history: {}         // จำนวนงานที่ทำเสร็จในแต่ละวัน เช่น { "2026-9-27": 3 }
+  lastDoneDate: ""    // วันที่ทำงานเสร็จล่าสุด (ไว้คำนวณ streak)
 };
 
 let currentFilter = "all";
@@ -55,10 +51,6 @@ function loadData() {
     } catch (e) {
       console.log("ข้อมูลเสีย เริ่มใหม่", e);
     }
-  }
-  // ข้อมูลเก่าที่บันทึกไว้ก่อนมี history
-  if (!data.history) {
-    data.history = {};
   }
 }
 
@@ -155,47 +147,8 @@ function updateStats() {
 
   progressFill.style.width = percent + "%";
   progressText.textContent = doneCount + "/" + total;
-
-  renderActivityGrid();
 }
 
-// ===== Activities Grid แบบ GitHub =====
-// แต่ละคอลัมน์คือ 1 สัปดาห์ (อาทิตย์ -> เสาร์) คอลัมน์ขวาสุดคือสัปดาห์นี้
-function renderActivityGrid() {
-  activityGrid.innerHTML = "";
-
-  const today = new Date();
-  // วันแรกของตาราง = วันอาทิตย์ของ (GRID_WEEKS - 1) สัปดาห์ก่อน
-  const day = new Date();
-  day.setHours(0, 0, 0, 0); // เริ่มที่เที่ยงคืน จะได้ไม่เกินเวลาของ today
-  day.setDate(today.getDate() - today.getDay() - (GRID_WEEKS - 1) * 7);
-
-  let total = 0;
-
-  // วนทีละวันจนถึงวันนี้
-  while (day <= today) {
-    const count = data.history[dateKey(day)] || 0;
-    total = total + count;
-
-    const cell = document.createElement("div");
-    cell.className = "cell level-" + getLevel(count);
-    cell.title = day.toLocaleDateString("th-TH") + " : ทำเสร็จ " + count + " งาน";
-    activityGrid.appendChild(cell);
-
-    day.setDate(day.getDate() + 1);
-  }
-
-  activityTotal.textContent = "ทำเสร็จ " + total + " งาน";
-}
-
-// ยิ่งทำเยอะ level ยิ่งสูง สียิ่งเข้ม
-function getLevel(count) {
-  if (count === 0) return 0;
-  if (count <= 1) return 1;
-  if (count <= 3) return 2;
-  if (count <= 5) return 3;
-  return 4;
-}
 
 // ===== เพิ่มงาน =====
 addForm.addEventListener("submit", function (e) {
@@ -228,10 +181,6 @@ function toggleTask(id, button) {
   task.done = !task.done;
 
   if (task.done) {
-    // จดลงประวัติของวันนี้
-    task.doneDate = getToday();
-    data.history[task.doneDate] = (data.history[task.doneDate] || 0) + 1;
-
     data.xp = data.xp + XP_PER_TASK;
     updateStreak();
     showXpFloat(button);
@@ -239,11 +188,6 @@ function toggleTask(id, button) {
     const msg = cheerMessages[Math.floor(Math.random() * cheerMessages.length)];
     owlSay(msg, "jump");
   } else {
-    // ยกเลิก -> ลบออกจากประวัติของวันที่เคยติ๊กไว้
-    if (data.history[task.doneDate] > 0) {
-      data.history[task.doneDate] = data.history[task.doneDate] - 1;
-    }
-
     data.xp = Math.max(0, data.xp - XP_PER_TASK);
     owlSay("ไม่เป็นไร ลองใหม่ได้!", "shake");
   }
